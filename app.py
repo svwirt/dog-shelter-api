@@ -13,17 +13,16 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['PROPAGATE_EXCEPTIONS'] = True
 api = Api(app)
 
-#
+
 # @app.before_first_request
 # def create_tables():
 #     db.create_all()
 
 
-# jwt = JWT(app, authenticate, identity)  # /auth
 
 api.add_resource(Ship, '/ship/<string:name>')
 api.add_resource(ShipList, '/ships')
-api.add_resource(Cargo, '/cargo/<string:name>')
+api.add_resource(Cargo, '/cargo/<int:id>')
 api.add_resource(CargoList, '/cargos')
 
 

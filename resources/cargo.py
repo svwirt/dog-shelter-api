@@ -9,7 +9,7 @@ class Cargo(Resource):
     parser = reqparse.RequestParser()
     parser.add_argument('weight',
                         type=float,
-                        required=True,
+                        # required=True,
                         help="This field cannot be left blank!"
                         )
     parser.add_argument('ship_id',
@@ -33,19 +33,19 @@ class Cargo(Resource):
                         help="This field cannot be left blank!"
                         )
     # @jwt_required()
-    def get(self, name):
-        cargo = CargoModel.find_by_name(name)
+    def get(self, id):
+        cargo = CargoModel.find_by_id(id)
         if cargo:
             return cargo.json()
         return {'message': 'Cargo not found'}, 404
 
-    def post(self, name):
-        if CargoModel.find_by_name(name):
-            return {'message': "An cargo with name '{}' already exists.".format(name)}, 400
+    def post(self, id):
+        if CargoModel.find_by_id(id):
+            return {'message': "An cargo with id '{}' already exists.".format(id)}, 400
 
         data = Cargo.parser.parse_args()
 
-        cargo = CargoModel(name, **data)
+        cargo = CargoModel(id, **data)
 
         try:
             cargo.save_to_db()
@@ -54,24 +54,25 @@ class Cargo(Resource):
 
         return cargo.json(), 201
 
-    def delete(self, name):
-        cargo = CargoModel.find_by_name(name)
+    def delete(self, id):
+        cargo = CargoModel.find_by_id(id)
         if cargo:
             cargo.delete_from_db()
             return {'message': 'Cargo deleted.'}
         return {'message': 'Cargo not found.'}, 404
 
-    def put(self, name):
+    def put(self, id):
         data = Cargo.parser.parse_args()
 
-        cargo = CargoModel.find_by_name(name)
+        cargo = CargoModel.find_by_id(id)
 
         if cargo:
             cargo.weight = data['weight']
             cargo.content = data['content']
             cargo.delivery_date= data['delivery_date']
+            cargo.cargoSelf = data['cargoSelf']
         else:
-            cargo = CargoModel(name, **data)
+            cargo = CargoModel(id, **data)
 
         cargo.save_to_db()
 
