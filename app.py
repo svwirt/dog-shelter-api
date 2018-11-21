@@ -1,38 +1,115 @@
 import os
-from flask import Flask
+from flask import Flask, jsonify
 from flask_restful import Api
-from flask_jwt import JWT
+from flask_jwt_extended import JWTManager
+from blacklist import BLACKLIST
 
+from resources.user import (
+    UserRegister,
+    User,
+    UserLogin,
+    UserLogout,
+    TokenRefresh,
+    UserList
+    )
+from resources.dog import Dog, DogList, DogPost, GetUserDogs
+from resources.shelter import Shelter, ShelterList, ShelterPost
 
-from resources.cargo import Cargo, CargoList
-from resources.ship import Ship, ShipList
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['PROPAGATE_EXCEPTIONS'] = True
+app.config['JWT_BLACKLIST_ENABLED'] = True
+app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = ['access', 'refresh']
+app.secret_key = 'rhaegarTheDog'
 api = Api(app)
 
+@app.before_first_request
+def create_tables():
+    db.create_all()
 
-# @app.before_first_request
-# def create_tables():
-#     db.create_all()
+jwt = JWTManager(app)  # /auth
+
+@jwt.user_claims_loader
+def add_claims_to_jwt(identity):
+    if identity == 1:
+        return {'is_admin': True}
+    return {'is_admin': False}
 
 
+@jwt.token_in_blacklist_loader
+def check_if_token_in_blacklist(decrypted_token):
+    return decrypted_token['jti'] in BLACKLIST
 
-api.add_resource(Ship, '/ship/<string:name>')
-api.add_resource(ShipList, '/ships')
-api.add_resource(Cargo, '/cargo/<int:id>')
-api.add_resource(CargoList, '/cargos')
 
+@jwt.expired_token_loader
+def expired_token_callback():
+    return jsonify({
+        'message': 'The token has expired.',
+        'error': 'token_expired'
+    }), 401
+
+
+@jwt.invalid_token_loader
+def invalid_token_callback(error):
+    return jsonify({
+        'message': 'Signature verification failed.',
+        'error': 'invalid_token'
+    }), 401
+
+
+@jwt.unauthorized_loader
+def missing_token_callback(error):
+    return jsonify({
+        "description": "Request does not contain an access token.",
+        'error': 'authorization_required'
+    }), 401
+
+
+@jwt.needs_fresh_token_loader
+def token_not_fresh_callback():
+    return jsonify({
+        "description": "The token is not fresh.",
+        'error': 'fresh_token_required'
+    }), 401
+
+
+@jwt.revoked_token_loader
+def revoked_token_callback():
+    return jsonify({
+        "description": "The token has been revoked.",
+        'error': 'token_revoked'
+    }), 401
+
+api.add_resource(Shelter, '/shelters/<int:id>')
+api.add_resource(ShelterList, '/shelters')
+api.add_resource(ShelterPost, '/shelters')
+api.add_resource(Dog, '/dogs/<int:id>')
+api.add_resource(DogList, '/dogs')
+api.add_resource(DogPost, '/dogs')
+api.add_resource(UserRegister, '/register')
+api.add_resource(GetUserDogs, '/users/<int:user_id>')
+api.add_resource(User, '/users/<int:user_id>')
+api.add_resource(UserList, '/users')
+api.add_resource(UserLogin, '/login')
+api.add_resource(UserLogout, '/logout')
+api.add_resource(TokenRefresh, '/refresh')
+
+
+#
+# if __name__ == '__main__':
+#     from db import db
+#     db.init_app(app)
+#
+#     if app.config['DEBUG']:
+#         @app.before_first_request
+#         def create_tables():
+#             db.create_all()
+#
+#     app.run(port=5000)
 
 if __name__ == '__main__':
     from db import db
     db.init_app(app)
-
-    if app.config['DEBUG']:
-        @app.before_first_request
-        def create_tables():
-            db.create_all()
-
-    app.run(port=5000)
+    app.run(port=5000, debug=True)
