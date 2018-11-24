@@ -1,4 +1,5 @@
 from db import db
+from flask import jsonify, make_response
 from flask_restful import Resource, reqparse
 from flask_accept import accept
 from flask_jwt_extended import (
@@ -25,7 +26,7 @@ class DogPost(Resource):
                         )
     parser.add_argument('shelter_id',
                         type=int,
-                        required=True,
+
                         help="Every dog needs a shelter_id."
                         )
     parser.add_argument('breed',
@@ -38,13 +39,13 @@ class DogPost(Resource):
 
                         help="Self field cannot be left blank!"
                         )
-    parser.add_argument('employee',
-                        type=str
-                       )
-    @jwt_required
+
+
+
+    @accept('application/json')
     def post(self):
         data = DogPost.parser.parse_args()
-        employee_id = get_jwt_identity()
+        # employee_id = get_jwt_identity()
         # data = Dog.parser.parse_args()
         name = data['name']
         str1 = "https://dog-shelter-api.herokuapp.com/"
@@ -52,16 +53,11 @@ class DogPost(Resource):
         id = data['id']
         if DogModel.find_by_name(name):
             return {'message': "An dog with name '{}' already exists.".format(name)}, 400
-
-
-
-        dog = DogModel(name, data['shelter_id'], data['breed'], str2, employee_id)
-
+        dog = DogModel(name, data['shelter_id'], data['breed'], str2)
         try:
             dog.save_to_db()
         except:
             return {"message": "An error occurred inserting the dog."}, 500
-
         return dog.json(), 201
 
 class Dog(Resource):
@@ -77,7 +73,7 @@ class Dog(Resource):
                         )
     parser.add_argument('shelter_id',
                         type=int,
-                        required=True,
+
                         help="Every dog needs a shelter_id."
                         )
     parser.add_argument('breed',
@@ -90,47 +86,54 @@ class Dog(Resource):
 
                         help="Self field cannot be left blank!"
                         )
-    parser.add_argument('employee',
-                        type=str
-                       )
-    @jwt_required
+    # parser.add_argument('employee',
+    #                     type=str
+    #                    )
+    @accept('application/json')
     def get(self, id):
-        claims = get_jwt_claims()
-        if not claims['is_admin']:
-            return {'message': 'Owner privilege required'}, 403
+        # claims = get_jwt_claims()
+        # if not claims['is_admin']:
+        #     return {'message': 'Owner privilege required'}, 403
         dog = DogModel.find_by_id(id)
         if dog:
             return dog.json()
         return {'message': 'Dog not found'}, 404
 
-    @jwt_required
+
+
     def delete(self, id):
-        claims = get_jwt_claims()
-        if not claims['is_admin']:
-            return {'message': 'Owner privilege required'}, 403
+        # claims = get_jwt_claims()
+        # if not claims['is_admin']:
+        #     return {'message': 'Owner privilege required'}, 403
         dog = DogModel.find_by_id(id)
         if dog:
             dog.delete_from_db()
-            return {'message': 'Dog deleted.'}
+            resp = make_response('', 204)
+            resp.headers['Content-Length'] = 0
+            return resp
+
         return {'message': 'Dog not found.'}, 404
 
+    @accept('application/json')
     def put(self, id):
         data = Dog.parser.parse_args()
-
         dog = DogModel.find_by_id(id)
-
+        name = data['name']
+        str1 = "https://dog-shelter-api.herokuapp.com/"
+        str2 = str1 + name
         if dog:
             dog.name = data['name']
             dog.breed = data['breed']
             dog.dogSelf = data['dogSelf']
         else:
-            dog = DogModel(id, data['name'], data['shelter_id'], data['breed'], data['delivery_date'], data['dogSelf'])
+            dog = DogModel(id, data['name'], data['shelter_id'], data['breed'], data['type'], str2)
 
         dog.save_to_db()
 
         return dog.json()
 
 class GetUserDogs(Resource):
+    @accept('application/json')
     @jwt_required
     def get(self, user_id):
         claims = get_jwt_claims()
@@ -142,5 +145,6 @@ class GetUserDogs(Resource):
         return{'message': 'User not found'}, 404
 
 class DogList(Resource):
+    @accept('application/json')
     def get(self):
         return {'dogs': list(map(lambda x: x.json(), DogModel.query.all()))}

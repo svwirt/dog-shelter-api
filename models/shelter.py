@@ -9,9 +9,11 @@ class ShelterModel(db.Model):
     name = db.Column(db.String(80))
     type = db.Column(db.String(80))
     zipcode = db.Column(db.Float)
+    count = db.Column(db.Integer)
     shelter_self = db.Column(db.String(80))
     dogs = db.relationship('DogModel', lazy='dynamic')
     users = db.relationship('UserModel', lazy='dynamic')
+
 
     def __init__(self, name, type, zipcode, shelter_self):
         self.name = name
@@ -21,13 +23,15 @@ class ShelterModel(db.Model):
 
 
     def json(self):
+        count = self.query.count()
         return {'id': self.id,
                 'name': self.name,
                 'type': self.type,
                 'zipcode': self.zipcode,
                 'dogs': [dog.json() for dog in self.dogs.all()],
                 'employees': [user.json() for user in self.users.all()],
-                "self": self.shelter_self}
+                'self': self.shelter_self,
+                'count': count}
 
     @classmethod
     def find_by_id(cls, id):

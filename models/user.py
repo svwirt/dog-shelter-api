@@ -10,9 +10,10 @@ class UserModel(db.Model):
     password = db.Column(db.String(80))
     status = db.Column(db.String(80))
     userSelf = db.Column(db.String(80))
+    count = db.Column(db.Integer)
     shelter_id = db.Column(db.Integer, db.ForeignKey('shelters.id'))
     shelters = db.relationship('ShelterModel', back_populates="users")
-    dogs = db.relationship('DogModel', back_populates="users", lazy='dynamic')
+    # dogs = db.relationship('DogModel', back_populates="users", lazy='dynamic')
 
     def __init__(self, username, password, status, shelter_id, userSelf):
         self.username = username
@@ -22,17 +23,17 @@ class UserModel(db.Model):
         self.userSelf = userSelf
 
     def json(self):
+        count = self.query.count()
         return{
             'id': self.id,
             'username': self.username,
             'status': self.status,
-            'dogs': [dog.json() for dog in DogModel.find_all()],
             'shelter id': self.shelter_id,
-            'self': self.userSelf
+            'self': self.userSelf,
+            'count': count
         }
 
-    def dogOwner(self):
-        return self.username
+
 
     def save_to_db(self):
         db.session.add(self)

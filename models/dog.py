@@ -13,25 +13,25 @@ class DogModel(db.Model):
     employee = db.Column(db.String(80))
     shelter_id = db.Column(db.Integer, db.ForeignKey('shelters.id'))
     shelters = db.relationship('ShelterModel')
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    users = db.relationship('UserModel', back_populates="dogs")
+    count = db.Column(db.Integer)
 
 
-    def __init__(self, name, shelter_id, breed, dogSelf, employee):
+    def __init__(self, name, shelter_id, breed, dogSelf):
 
         self.name = name
         self.shelter_id = shelter_id
         self.breed = breed
         self.dogSelf = dogSelf
-        self.employee = employee
+
 
     def json(self):
+        count = self.query.count()
         return {'id': self.id,
                 'name': self.name,
                 'shelter id': self.shelter_id,
                 'breed': self.breed,
                 'self': self.dogSelf,
-                'employee id': self.employee}
+                'count': count}
 
     @classmethod
     def find_by_id(cls, id):
@@ -44,6 +44,8 @@ class DogModel(db.Model):
     @classmethod
     def find_all(cls):
         return cls.query.all()
+
+
     def save_to_db(self):
         db.session.add(self)
         db.session.commit()

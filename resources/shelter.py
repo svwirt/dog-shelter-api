@@ -27,12 +27,7 @@ class ShelterPost(Resource):
                         required=True,
                         help="This field cannot be left blank!"
                         )
-    # parser.add_argument('shelter_self',
-    #                     type=str,
-    #                     # required=True,
-    #                     # help="This field cannot be left blank!"
-    #                     )
-
+    @accept('application/json')
     @jwt_required
     def post(self):
         claims = get_jwt_claims()
@@ -42,7 +37,7 @@ class ShelterPost(Resource):
         data = ShelterPost.parser.parse_args()
         name = data['name']
         if ShelterModel.find_by_name(data['name']):
-            return {'message': "A shelter with name '{}' already exists.".format(id)}, 400
+            return {'message': "A shelter with name '{}' already exists.".format(name)}, 400
 
         str1 = "https://dog-shelter-api.herokuapp.com/"
         str2 = str1 + name
@@ -53,27 +48,6 @@ class ShelterPost(Resource):
             return {"message": "An error occurred creating the shelter."}, 500
 
         return shelter.json(), 201
-
-
-
-    #
-    # def post(self):
-    #     data = _user_parser.parse_args()
-    #     name = data['username']
-    #     str1 = "https://dog-shelter-api.herokuapp.com/"
-    #     str2 = str1 + name
-    #     if UserModel.find_by_username(data['username']):
-    #         return {"message": "A user with that username already exists"}, 400
-    #
-    #     user = UserModel(name, data['password'], data['status'], data['shelter_id'], str2)
-    #     user.save_to_db()
-    #
-    #     return {"message": "User created successfully."}, 201
-
-
-
-
-
 
 
 class Shelter(Resource):
@@ -93,12 +67,11 @@ class Shelter(Resource):
                         required=True,
                         help="This field cannot be left blank!"
                         )
-    parser.add_argument('shelterSelf',
+    parser.add_argument('shelter_self',
                         type=str,
-                        # required=True,
-                        # help="This field cannot be left blank!"
-                        )
 
+                        )
+    @accept('application/json')
     @jwt_required
     def get(self, id):
         claims = get_jwt_claims()
@@ -109,6 +82,7 @@ class Shelter(Resource):
             return shelter.json()
         return {'message': 'Shelter not found'}, 404
 
+    @accept('application/json')
     @jwt_required
     def delete(self, id):
         claims = get_jwt_claims()
@@ -117,9 +91,10 @@ class Shelter(Resource):
         shelter = ShelterModel.find_by_id(id)
         if shelter:
             shelter.delete_from_db()
-            return {'message': 'Shelter deleted'}
+            return ('', 204)
         return {'message': 'Shelter not found.'}, 404
 
+    @accept('application/json')
     @jwt_required
     def put(self, id):
         claims = get_jwt_claims()
@@ -135,7 +110,7 @@ class Shelter(Resource):
             shelter.name = name
             shelter.type = data['type']
             shelter.zipcode = data['zipcode']
-            shelter.shelterSelf = str2
+            shelter.shelter_self = str2
         else:
             shelter = ShelterModel(**data)
 
@@ -145,5 +120,6 @@ class Shelter(Resource):
 
 
 class ShelterList(Resource):
+    @accept('application/json')
     def get(self):
         return {'shelters': list(map(lambda x: x.json(), ShelterModel.query.all()))}

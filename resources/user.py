@@ -9,6 +9,7 @@ from flask_jwt_extended import (
     jwt_required,
     get_raw_jwt
 )
+from flask_accept import accept
 from blacklist import BLACKLIST
 from models.user import UserModel
 
@@ -36,6 +37,7 @@ _user_parser.add_argument('status',
 
 
 class UserRegister(Resource):
+    @accept('application/json')
     def post(self):
         data = _user_parser.parse_args()
         name = data['username']
@@ -52,6 +54,8 @@ class UserRegister(Resource):
 
 class User(Resource):
     @classmethod
+    @accept('application/json')
+    @jwt_required
     def get(cls, user_id):
         user =UserModel.find_by_id(user_id)
         if not user:
@@ -59,14 +63,18 @@ class User(Resource):
         return user.json()
 
     @classmethod
+    @accept('application/json')
+    @jwt_required
     def delete(cls, user_id):
         user =UserModel.find_by_id(user_id)
         if not user:
             return{'message': 'User not found'}, 404
         user.delete_from_db()
-        return {'message': 'User deleted.'}, 200
+        return ('', 204)
 
     @classmethod
+    @accept('application/json')
+    @jwt_required
     def put(cls, user_id):
         data = _user_parser.parse_args()
         user =UserModel.find_by_id(user_id)
@@ -87,10 +95,12 @@ class User(Resource):
         return user.json()
 
 class UserList(Resource):
+    @accept('application/json')
     def get(self):
         return {'users': list(map(lambda x: x.json(), UserModel.query.all()))}
 
 class UserLogin(Resource):
+    @accept('application/json')
     def post(self):
         #get data from parse_args
         data = _user_parser.parse_args()
@@ -107,6 +117,7 @@ class UserLogin(Resource):
         return {'message': 'Invalid credentials'}, 401
 
 class UserLogout(Resource):
+    @accept('application/json')
     @jwt_required
     def post(self):
         jti = get_raw_jwt()['jti']
@@ -114,6 +125,7 @@ class UserLogout(Resource):
         return {'message': 'Successfully logged out'}, 200
 
 class TokenRefresh(Resource):
+    @accept('application/json')
     @jwt_refresh_token_required
     def post(self):
         current_user = get_jwt_identity()
