@@ -28,7 +28,7 @@ class UserModel(db.Model):
             'id': self.id,
             'username': self.username,
             'status': self.status,
-            'shelter id': self.shelter_id,
+            'shelter_id': self.shelter_id,
             'self': self.userSelf,
             'count': count
         }

@@ -29,7 +29,7 @@ class DogModel(db.Model):
         for i in range(4):
             return {'id': self.id,
                     'name': self.name,
-                    'shelter id': self.shelter_id,
+                    'shelter_id': self.shelter_id,
                     'breed': self.breed,
                     'self': self.dogSelf,
                     'count': count}
