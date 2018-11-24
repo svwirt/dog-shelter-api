@@ -101,7 +101,7 @@ class User(Resource):
 class UserList(Resource):
     @accept('application/json')
     def get(self):
-        return {'users': list(map(lambda x: x.json(), UserModel.query.all()))}
+        return {'users': list(map(lambda x: x.partial_json(), UserModel.query.all()))}
 
 class CleanupUsers(Resource):
     def delete(self):
