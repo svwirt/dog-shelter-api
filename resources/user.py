@@ -77,9 +77,9 @@ class User(Resource):
     @accept('application/json')
     @jwt_required
     def put(cls, user_id):
-        claims = get_jwt_claims()
-        if not claims['is_admin']:
-            return {'message': 'Owner privilege required'}, 403
+        # claims = get_jwt_claims()
+        # if not claims['is_admin']:
+        #     return {'message': 'Owner privilege required'}, 403
         data = _user_parser.parse_args()
         user =UserModel.find_by_id(user_id)
         name = data['username']
