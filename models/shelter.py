@@ -29,9 +29,10 @@ class ShelterModel(db.Model):
                 'type': self.type,
                 'zipcode': self.zipcode,
                 'dogs': [dog.json() for dog in self.dogs.all()],
-                'employees': [user.json() for user in self.users.all()],
+                'employees': [user.partial_json() for user in self.users.all()],
                 'self': self.shelter_self,
                 'count': count}
+
 
     @classmethod
     def find_by_id(cls, id):

@@ -27,13 +27,9 @@ class ShelterPost(Resource):
                         required=True,
                         help="This field cannot be left blank!"
                         )
-    @accept('application/json')
-    @jwt_required
-    def post(self):
-        claims = get_jwt_claims()
-        if not claims['is_admin']:
-            return {'message': 'Owner privilege required'}, 403
 
+    @accept('application/json')
+    def post(self):
         data = ShelterPost.parser.parse_args()
         name = data['name']
         if ShelterModel.find_by_name(data['name']):
@@ -123,3 +119,7 @@ class ShelterList(Resource):
     @accept('application/json')
     def get(self):
         return {'shelters': list(map(lambda x: x.json(), ShelterModel.query.all()))}
+
+class CleanupShelters(Resource):
+    def delete(self):
+        list(map(lambda x: x.delete_from_db(), ShelterModel.query.all()))

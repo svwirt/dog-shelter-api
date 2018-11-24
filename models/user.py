@@ -33,7 +33,11 @@ class UserModel(db.Model):
             'count': count
         }
 
-
+    def partial_json(self):
+        return {
+            'id': self.id,
+            'username': self.username
+        }
 
     def save_to_db(self):
         db.session.add(self)

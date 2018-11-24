@@ -26,12 +26,14 @@ class DogModel(db.Model):
 
     def json(self):
         count = self.query.count()
-        return {'id': self.id,
-                'name': self.name,
-                'shelter id': self.shelter_id,
-                'breed': self.breed,
-                'self': self.dogSelf,
-                'count': count}
+        for i in range(4):
+            return {'id': self.id,
+                    'name': self.name,
+                    'shelter id': self.shelter_id,
+                    'breed': self.breed,
+                    'self': self.dogSelf,
+                    'count': count}
+
 
     @classmethod
     def find_by_id(cls, id):

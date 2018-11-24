@@ -7,6 +7,7 @@ from flask_jwt_extended import (
     jwt_refresh_token_required,
     get_jwt_identity,
     jwt_required,
+    get_jwt_claims,
     get_raw_jwt
 )
 from flask_accept import accept
@@ -26,12 +27,12 @@ _user_parser.add_argument('password',
                     )
 _user_parser.add_argument('shelter_id',
                     type=int,
-                    required=True,
+
                     help="This field cannot be blank."
                     )
 _user_parser.add_argument('status',
                     type=str,
-                    required=True,
+
                     help="This field cannot be blank."
                     )
 
@@ -45,8 +46,8 @@ class UserRegister(Resource):
         str2 = str1 + name
         if UserModel.find_by_username(data['username']):
             return {"message": "A user with that username already exists"}, 400
-
-        user = UserModel(name, data['password'], data['status'], data['shelter_id'], str2)
+        s_id = None
+        user = UserModel(name, data['password'], data['status'], s_id, str2)
         user.save_to_db()
 
         return {"message": "User created successfully."}, 201
@@ -76,6 +77,9 @@ class User(Resource):
     @accept('application/json')
     @jwt_required
     def put(cls, user_id):
+        claims = get_jwt_claims()
+        if not claims['is_admin']:
+            return {'message': 'Owner privilege required'}, 403
         data = _user_parser.parse_args()
         user =UserModel.find_by_id(user_id)
         name = data['username']
@@ -98,6 +102,10 @@ class UserList(Resource):
     @accept('application/json')
     def get(self):
         return {'users': list(map(lambda x: x.json(), UserModel.query.all()))}
+
+class CleanupUsers(Resource):
+    def delete(self):
+        list(map(lambda x: x.delete_from_db(), UserModel.query.all()))
 
 class UserLogin(Resource):
     @accept('application/json')

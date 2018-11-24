@@ -10,11 +10,22 @@ from resources.user import (
     UserLogin,
     UserLogout,
     TokenRefresh,
-    UserList
+    UserList,
+    CleanupUsers
     )
-from resources.dog import Dog, DogList, DogPost, GetUserDogs
-from resources.shelter import Shelter, ShelterList, ShelterPost
-
+from resources.dog import (
+    Dog,
+    DogList,
+    DogPost,
+    GetUserDogs,
+    CleanupDogs
+    )
+from resources.shelter import (
+    Shelter,
+    ShelterList,
+    ShelterPost,
+    CleanupShelters
+)
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
@@ -95,6 +106,9 @@ api.add_resource(UserList, '/users')
 api.add_resource(UserLogin, '/login')
 api.add_resource(UserLogout, '/logout')
 api.add_resource(TokenRefresh, '/refresh')
+api.add_resource(CleanupDogs, '/cleanDogs')
+api.add_resource(CleanupShelters, '/cleanShelters')
+api.add_resource(CleanupUsers, '/cleanUsers')
 
 
 

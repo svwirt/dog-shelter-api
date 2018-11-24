@@ -24,25 +24,17 @@ class DogPost(Resource):
 
                         help="Name field cannot be left blank top!"
                         )
-    parser.add_argument('shelter_id',
-                        type=int,
 
-                        help="Every dog needs a shelter_id."
-                        )
     parser.add_argument('breed',
                         type=str,
 
                         help="Breed field cannot be left blank!"
                         )
-    parser.add_argument('dogSelf',
-                        type=str,
-
-                        help="Self field cannot be left blank!"
-                        )
 
 
 
-    @accept('application/json')
+
+
     def post(self):
         data = DogPost.parser.parse_args()
         # employee_id = get_jwt_identity()
@@ -53,7 +45,9 @@ class DogPost(Resource):
         id = data['id']
         if DogModel.find_by_name(name):
             return {'message': "An dog with name '{}' already exists.".format(name)}, 400
-        dog = DogModel(name, data['shelter_id'], data['breed'], str2)
+        s_id = None
+        dog = DogModel(name, s_id, data['breed'], str2)
+
         try:
             dog.save_to_db()
         except:
@@ -86,14 +80,10 @@ class Dog(Resource):
 
                         help="Self field cannot be left blank!"
                         )
-    # parser.add_argument('employee',
-    #                     type=str
-    #                    )
+
+
     @accept('application/json')
     def get(self, id):
-        # claims = get_jwt_claims()
-        # if not claims['is_admin']:
-        #     return {'message': 'Owner privilege required'}, 403
         dog = DogModel.find_by_id(id)
         if dog:
             return dog.json()
@@ -102,9 +92,6 @@ class Dog(Resource):
 
 
     def delete(self, id):
-        # claims = get_jwt_claims()
-        # if not claims['is_admin']:
-        #     return {'message': 'Owner privilege required'}, 403
         dog = DogModel.find_by_id(id)
         if dog:
             dog.delete_from_db()
@@ -123,10 +110,11 @@ class Dog(Resource):
         str2 = str1 + name
         if dog:
             dog.name = data['name']
+            dog.shelter_id = data['shelter_id']
             dog.breed = data['breed']
-            dog.dogSelf = data['dogSelf']
+            dog.dogSelf = str2
         else:
-            dog = DogModel(id, data['name'], data['shelter_id'], data['breed'], data['type'], str2)
+            dog = DogModel(data['name'], data['shelter_id'], data['breed'], str2)
 
         dog.save_to_db()
 
@@ -147,4 +135,9 @@ class GetUserDogs(Resource):
 class DogList(Resource):
     @accept('application/json')
     def get(self):
-        return {'dogs': list(map(lambda x: x.json(), DogModel.query.all()))}
+        return {'dogs': list(map(lambda x: x.json(), DogModel.query.limit(5).all()))}
+
+
+class CleanupDogs(Resource):
+    def delete(self):
+        list(map(lambda x: x.delete_from_db(), DogModel.query.all()))
