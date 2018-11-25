@@ -118,7 +118,7 @@ class Shelter(Resource):
 class ShelterList(Resource):
     @accept('application/json')
     def get(self):
-        return {'shelters': list(map(lambda x: x.json(), ShelterModel.query.all()))}
+        return {'shelters': list(map(lambda x: x.json(), ShelterModel.query.limit(5).all()))}
 
 class CleanupShelters(Resource):
     def delete(self):
